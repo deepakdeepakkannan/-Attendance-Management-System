@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shree Venkateshwara Hi-Tech Engineering College, Gobi | Attendance</title>
+  <meta name="description" content="Student, faculty, and admin attendance portal for Shree Venkateshwara Hi-Tech Engineering College, Gobi.">
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- HTML5 QR Code Scanner CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="app-navbar" id="appNavbar">
+    <div class="nav-brand">
+      <div class="brand-icon-wrap">⚡</div>
+      <div>
+        <div class="brand-title">Shree Venkateshwara Hi-Tech</div>
+        <div class="brand-subtitle">Engineering College • Gobi</div>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Dark/Light Theme Toggle -->
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+        <span id="themeIcon">☀️</span>
+      </button>
+
+      <!-- User Profile Pill (Visible when logged in) -->
+      <div id="navUserBadge" class="user-badge" style="display: none;">
+        <div class="user-avatar" id="navAvatar">U</div>
+        <div class="user-meta">
+          <span class="user-name" id="navUserName">User Name</span>
+          <span class="user-role-tag" id="navUserRole">STUDENT</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn" style="margin-left: 0.5rem;">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="app-container" id="mainContainer">
+
+    <!-- ====================================================================
+         1. LOGIN VIEW
+         ==================================================================== -->
+    <section id="loginView" class="login-page-wrapper">
+      <div class="login-card">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <div style="font-size: 2.75rem; margin-bottom: 0.5rem;">🎓</div>
+          <h2>Shree Venkateshwara Hi-Tech Engineering College</h2>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;">
+            Sign in with your college account
+          </p>
+        </div>
+
+        <div class="login-role-buttons" aria-label="Choose account role">
+          <button type="button" class="login-role-button" onclick="selectLoginRole('student')">Student</button>
+          <button type="button" class="login-role-button" onclick="selectLoginRole('faculty')">Faculty</button>
+          <button type="button" class="login-role-button" onclick="selectLoginRole('admin')">Admin</button>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group" id="loginEmailGroup" style="display: none;">
+            <label class="form-label" for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" class="form-control" value="admin@college.edu" placeholder="Enter email">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password</label>
+            <div class="password-input-wrap">
+              <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required>
+              <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false" onclick="togglePasswordVisibility('loginPassword', this)">Show</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;" id="loginSubmitBtn">
+            Sign In Securely →
+          </button>
+        </form>
+
+        <div style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.75rem; color: var(--text-dim);">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--success);">🛡️</span> <strong>JWT & RBAC Protected:</strong> Role-Based Access Control
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--accent-cyan);">🔄</span> <strong>Dynamic Rotating QR:</strong> Self-invalidates every 20 seconds
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--warning);">⏱️</span> <strong>Duplicate & Time Shield:</strong> Anti-proxy attendance defense
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         2. STUDENT PORTAL
+         ==================================================================== -->
+    <section id="studentPortal" style="display: none;">
+      <!-- Student Banner -->
+      <div class="glass-card" style="margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.75rem;">📱</span>
+            <div>
+              <h2 id="studentFullName">Student Name</h2>
+              <div style="display: flex; gap: 0.75rem; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem; flex-wrap: wrap;">
+                <span>Roll No: <strong id="studentRoll" style="color: var(--primary-light);">24CS101</strong></span>
+                <span>•</span>
+                <span id="studentClass">B.Tech CSE - 4th Sem (Sec A)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn btn-primary" onclick="showStudentTab('scan')">
+            📷 Open QR Scanner
+          </button>
+        </div>
+      </div>
+
+      <!-- Overview Stats Grid -->
+      <div class="stats-grid">
+        <div class="glass-card stat-card">
+          <div class="stat-icon emerald">📊</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stuOverallPercentage">--%</div>
+            <div class="stat-label">Overall Attendance</div>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card">
+          <div class="stat-icon indigo">📚</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stuAttendedRatio">-- / --</div>
+            <div class="stat-label">Attended / Total Classes</div>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card">
+          <div class="stat-icon cyan">🌅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stuTodayMorningStatus">--</div>
+            <div class="stat-label">Today's Morning Session</div>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card">
+          <div class="stat-icon amber">🌇</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stuTodayAfternoonStatus">--</div>
+            <div class="stat-label">Today's Afternoon Session</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Navigation Tabs -->
+      <div class="portal-nav">
+        <button class="portal-tab-btn active" id="stuTabBtn-dashboard" onclick="showStudentTab('dashboard')">
+          📊 Dashboard & Today's Status
+        </button>
+        <button class="portal-tab-btn" id="stuTabBtn-scan" onclick="showStudentTab('scan')">
+          📷 Scan Dynamic QR
+        </button>
+        <button class="portal-tab-btn" id="stuTabBtn-history" onclick="showStudentTab('history')">
+          📜 Attendance History
+        </button>
+        <button class="portal-tab-btn" id="stuTabBtn-subjects" onclick="showStudentTab('subjects')">
+          📈 Subject-wise Percentage
+        </button>
+        <button class="portal-tab-btn" id="stuTabBtn-notifications" onclick="showStudentTab('notifications')">
+          🔔 Notifications <span id="stuNotifBadge" style="display: none; background: var(--danger); font-size: 0.7rem; padding: 2px 6px; border-radius: 99px; margin-left: 4px;">0</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Student Dashboard -->
+      <div id="stuTab-dashboard">
+        <!-- Defaulter Warning Banner if < 75% -->
+        <div id="stuDefaulterAlert" class="glass-card" style="display: none; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span style="font-size: 2rem;">⚠️</span>
+            <div>
+              <h4 style="color: #fca5a5;">Attendance Defaulter Alert (< 75% Cutoff)</h4>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">
+                Your overall attendance is currently below the mandatory 75% university requirement. Please ensure you attend all upcoming lectures.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Live Session Prompt (If faculty has an active session right now) -->
+        <div id="stuActiveSessionCard" class="glass-card" style="display: none; background: rgba(99, 102, 241, 0.15); border-color: var(--primary); margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div class="pulse-dot"></div>
+              <div>
+                <span class="pulse-badge">Active Session Ongoing</span>
+                <h3 style="margin-top: 0.4rem;" id="stuActiveSessTitle">CS401 - Data Structures</h3>
+                <div style="color: var(--text-muted); font-size: 0.85rem;" id="stuActiveSessSub">Faculty: Prof. Rajesh Sharma</div>
+              </div>
+            </div>
+            <div id="stuActiveSessAction">
+              <button class="btn btn-primary" onclick="showStudentTab('scan')">
+                ⚡ Scan QR Now
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Attendance Schedule & Status -->
+        <div class="glass-card" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3>📅 Today's Attendance Status</h3>
+            <span style="font-size: 0.85rem; color: var(--text-muted);" id="stuTodayDateStr">--</span>
+          </div>
+
+          <div id="stuTodaySessionsList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            <!-- Dynamically populated today's sessions -->
+          </div>
+        </div>
+
+        <!-- Quick Subject Percentage Summary -->
+        <div class="glass-card">
+          <h3 style="margin-bottom: 1.25rem;">📊 Subject Attendance Overview</h3>
+          <div id="stuSubjectProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+            <!-- Dynamically populated subject gauges -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Scan Dynamic QR -->
+      <div id="stuTab-scan" style="display: none;">
+        <div class="glass-card" style="max-width: 650px; margin: 0 auto; text-align: center;">
+          <h2 style="margin-bottom: 0.5rem;">📷 Scan Dynamic QR Code</h2>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">
+            Aim your camera at the rotating QR code displayed by your faculty. The code self-refreshes every 20 seconds.
+          </p>
+
+          <!-- Camera Scanner Viewport -->
+          <div class="scanner-box" id="scannerViewport">
+            <div class="scanner-laser-line" id="scannerLaser" style="display: none;"></div>
+            <div id="qr-reader" style="width: 100%;"></div>
+          </div>
+
+          <!-- Scanner Controls -->
+          <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="startCameraBtn" onclick="startQrScanner()">
+              📹 Start Camera
+            </button>
+            <button class="btn btn-secondary" id="stopCameraBtn" onclick="stopQrScanner()" style="display: none;">
+              ⏹️ Stop Camera
+            </button>
+          </div>
+
+          <!-- Quick Test Simulator for Testing without webcam -->
+          <div style="margin-top: 2rem; padding: 1.25rem; background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.88rem; color: var(--accent-cyan); margin-bottom: 0.4rem;">
+              ⚡ Testing & Desktop Simulator
+            </h4>
+            <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.85rem;">
+              If testing on a laptop without camera or in automated tests, click below to simulate an instantaneous valid scan of the active faculty session:
+            </p>
+            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+              <button class="btn btn-secondary btn-sm" onclick="simulateFastScan()">
+                ⚡ Auto-Scan Active Session Now
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="showManualCodePrompt()">
+                ⌨️ Enter QR Payload Manually
+              </button>
+            </div>
+          </div>
+
+          <!-- Scan Status Result Display -->
+          <div id="scanResultAlert" style="margin-top: 1.5rem; display: none;"></div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Attendance History -->
+      <div id="stuTab-history" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3>📜 My Attendance Log</h3>
+            
+            <!-- Filters -->
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <select id="stuHistoryFilterSubject" class="form-control" style="width: auto; padding: 0.4rem 0.85rem; font-size: 0.82rem;" onchange="loadStudentHistory()">
+                <option value="">All Subjects</option>
+              </select>
+              <select id="stuHistoryFilterSession" class="form-control" style="width: auto; padding: 0.4rem 0.85rem; font-size: 0.82rem;" onchange="loadStudentHistory()">
+                <option value="">All Sessions</option>
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+              </select>
+              <select id="stuHistoryFilterStatus" class="form-control" style="width: auto; padding: 0.4rem 0.85rem; font-size: 0.82rem;" onchange="loadStudentHistory()">
+                <option value="">All Statuses</option>
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Session</th>
+                  <th>Subject</th>
+                  <th>Faculty</th>
+                  <th>Topic</th>
+                  <th>Status</th>
+                  <th>Marked At</th>
+                  <th>Verification</th>
+                </tr>
+              </thead>
+              <tbody id="stuHistoryTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Subject-wise Percentage -->
+      <div id="stuTab-subjects" style="display: none;">
+        <div class="glass-card" style="margin-bottom: 2rem;">
+          <h3 style="margin-bottom: 1.5rem;">📈 Detailed Subject Attendance & Eligibility</h3>
+          <div id="stuDetailedSubjectsList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Notifications -->
+      <div id="stuTab-notifications" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3>🔔 Notifications & Alerts</h3>
+            <button class="btn btn-secondary btn-sm" onclick="markAllNotificationsRead()">Mark All Read</button>
+          </div>
+          <div id="stuNotificationsList" style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================================
+         3. FACULTY PORTAL
+         ==================================================================== -->
+    <section id="facultyPortal" style="display: none;">
+      <!-- Faculty Header Banner -->
+      <div class="glass-card" style="margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.75rem;">👨‍🏫</span>
+          <div>
+            <h2 id="facultyFullName">Prof. Rajesh Sharma</h2>
+            <div style="display: flex; gap: 0.75rem; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">
+              <span id="facultyDept">Computer Science & Engineering</span>
+              <span>•</span>
+              <span>ID: <strong id="facultyEmpId" style="color: var(--accent-cyan);">FAC-CS-101</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn btn-primary" onclick="showFacultyTab('start-session')">
+            ➕ Start New Session
+          </button>
+        </div>
+      </div>
+
+      <!-- Faculty Navigation Tabs -->
+      <div class="portal-nav">
+        <button class="portal-tab-btn active" id="facTabBtn-active" onclick="showFacultyTab('active')">
+          ⚡ Dynamic QR & Live Session
+        </button>
+        <button class="portal-tab-btn" id="facTabBtn-start" onclick="showFacultyTab('start-session')">
+          ➕ Start Session
+        </button>
+        <button class="portal-tab-btn" id="facTabBtn-roster" onclick="showFacultyTab('roster')">
+          📋 Live Roster
+        </button>
+        <button class="portal-tab-btn" id="facTabBtn-history" onclick="showFacultyTab('history')">
+          📜 Session History
+        </button>
+        <button class="portal-tab-btn" id="facTabBtn-reports" onclick="showFacultyTab('reports')">
+          📊 Reports & Defaulters
+        </button>
+      </div>
+
+      <!-- Tab 1: Dynamic QR Code Presentation View (Faculty Projector) -->
+      <div id="facTab-active">
+        <!-- If no active session -->
+        <div id="facNoActiveSessionMsg" class="glass-card" style="text-align: center; padding: 4rem 1.5rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+          <h3>No Active Attendance Session</h3>
+          <p style="color: var(--text-muted); margin: 0.5rem 0 1.5rem; max-width: 480px; margin-inline: auto;">
+            Launch a Morning or Afternoon attendance session to generate dynamic rotating QR codes for your students.
+          </p>
+          <button class="btn btn-primary btn-lg" onclick="showFacultyTab('start-session')">
+            Launch New Session Now →
+          </button>
+        </div>
+
+        <!-- When session IS active -->
+        <div id="facActiveSessionContainer" style="display: none;">
+          <div style="display: grid; grid-template-columns: 1fr 1.25fr; gap: 1.5rem; align-items: start;">
+            
+            <!-- Dynamic QR Projector Card -->
+            <div class="glass-card qr-stage-wrapper">
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <span class="pulse-badge">
+                  <span class="pulse-dot"></span> LIVE DYNAMIC QR
+                </span>
+                <span class="session-badge morning" id="facActiveSessionTypeBadge">Morning</span>
+              </div>
+
+              <h2 style="margin-top: 1rem; font-size: 1.4rem;" id="facActiveSubjectTitle">CS401 - Data Structures</h2>
+              <div style="color: var(--text-muted); font-size: 0.85rem;" id="facActiveClassInfo">B.Tech CSE 4th Sem (Sec A)</div>
+
+              <!-- Crisp QR Display -->
+              <div class="qr-code-frame">
+                <img id="facQrImage" src="" alt="Dynamic Attendance QR" class="qr-code-image">
+              </div>
+
+              <!-- Animated Countdown Indicator -->
+              <div class="qr-countdown-container">
+                <svg class="countdown-ring" viewBox="0 0 36 36">
+                  <path class="countdown-circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path class="countdown-circle-bar" id="qrProgressCircle"
+                    stroke-dasharray="100, 100"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div style="text-align: left;">
+                  <div style="font-weight: 700; font-size: 0.9rem;">
+                    Token Rotates In: <span id="qrCountdownSeconds" style="color: var(--accent-cyan); font-family: monospace; font-size: 1.1rem;">20</span>s
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim);">Screenshot-proof anti-proxy token</div>
+                </div>
+              </div>
+
+              <!-- Session Action Controls -->
+              <div style="margin-top: 1.75rem; display: flex; gap: 0.75rem; width: 100%; justify-content: center;">
+                <button class="btn btn-secondary btn-sm" onclick="forceRotateQr()">
+                  🔄 Refresh QR
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="closeActiveSession()">
+                  🛑 Close & Finalize Session
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Attendance Roster Snapshot -->
+            <div class="glass-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <div>
+                  <h3>Live Student Check-ins</h3>
+                  <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                    Real-time updates via Server-Sent Events (SSE)
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 1.5rem; font-weight: 800; color: var(--success);" id="facLiveCountRatio">
+                    0 / 0
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Students Present</div>
+                </div>
+              </div>
+
+              <!-- Roster Table -->
+              <div class="live-table-wrapper" style="max-height: 480px; overflow-y: auto;">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Roll No</th>
+                      <th>Student Name</th>
+                      <th>Status</th>
+                      <th>Time</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="facLiveRosterBody">
+                    <!-- Populated live via SSE -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Start New Session Form -->
+      <div id="facTab-start-session" style="display: none;">
+        <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+          <h2 style="margin-bottom: 0.5rem;">➕ Start Attendance Session</h2>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.75rem;">
+            Select class, subject, and session type to launch dynamic QR codes for students to scan.
+          </p>
+
+          <form id="startSessionForm" onsubmit="handleStartSession(event)">
+            <div class="form-group">
+              <label class="form-label" for="sessClassSelect">Target Class & Section</label>
+              <div class="class-combobox" data-class-combobox="sessClassSelect">
+                <span class="class-combobox-icon" aria-hidden="true">⌕</span>
+                <input type="search" class="form-control class-combobox-input" id="sessClassSearch" placeholder="Search or select class" aria-label="Search or select class" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sessClassOptions">
+                <div class="class-combobox-options" id="sessClassOptions" role="listbox"></div>
+              </div>
+              <select id="sessClassSelect" class="class-combobox-value" required onchange="filterSubjectsByClass()" tabindex="-1" aria-hidden="true">
+                <option value="">Select Class...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="sessSubjectSelect">Subject</label>
+              <select id="sessSubjectSelect" class="form-control" required>
+                <option value="">Select Subject...</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Session Timing Type</label>
+                <select id="sessTypeSelect" class="form-control" required>
+                  <option value="morning">🌅 Morning Session (08:00 - 12:30)</option>
+                  <option value="afternoon">🌇 Afternoon Session (13:00 - 17:00)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Session Duration</label>
+                <select id="sessDurationSelect" class="form-control">
+                  <option value="15">15 Minutes</option>
+                  <option value="30" selected>30 Minutes</option>
+                  <option value="45">45 Minutes</option>
+                  <option value="60">60 Minutes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="sessTopicInput">Lecture Topic / Notes</label>
+              <input type="text" id="sessTopicInput" class="form-control" placeholder="e.g. Binary Search Trees & AVL Trees">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+              🚀 Launch Dynamic QR Session
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab 3: Detailed Live Roster / Override -->
+      <div id="facTab-roster" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3>📋 Active Class Roster & Manual Overrides</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">
+                Faculty can manually mark or excuse any student who cannot scan.
+              </p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadFacultyLiveRoster()">
+              🔄 Refresh Roster
+            </button>
+          </div>
+
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Student Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Method</th>
+                  <th>Time</th>
+                  <th>Manual Override</th>
+                </tr>
+              </thead>
+              <tbody id="facFullRosterBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Faculty Session History -->
+      <div id="facTab-history" style="display: none;">
+        <div class="glass-card">
+          <h3 style="margin-bottom: 1.5rem;">📜 My Past Attendance Sessions</h3>
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Session</th>
+                  <th>Subject</th>
+                  <th>Class</th>
+                  <th>Topic</th>
+                  <th>Attendance Ratio</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="facHistoryTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Faculty Reports & Defaulters -->
+      <div id="facTab-reports" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3>📊 Attendance Analytics & Defaulters</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">
+                Track student eligibility and export reports for official records.
+              </p>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+              <button class="btn btn-secondary btn-sm" onclick="exportFacultyReportCSV()">
+                📥 Export CSV
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="window.print()">
+                🖨️ Print Report
+              </button>
+            </div>
+          </div>
+
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Student Name</th>
+                  <th>Class</th>
+                  <th>Attended / Total</th>
+                  <th>Attendance %</th>
+                  <th>Eligibility Status</th>
+                </tr>
+              </thead>
+              <tbody id="facReportsTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================================
+         4. ADMIN PORTAL
+         ==================================================================== -->
+    <section id="adminPortal" style="display: none;">
+      <!-- Admin Header -->
+      <div class="glass-card" style="margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.75rem;">👨‍💼</span>
+          <div>
+            <h2 id="adminFullName">Dr. Arvind Mehta (Administrator)</h2>
+            <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">
+              College Administration & System Governance
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn btn-primary" onclick="openAdminCreateModal('student')">
+            + New Student
+          </button>
+          <button class="btn btn-secondary" onclick="openAdminCreateModal('faculty')">
+            + New Faculty
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin System Statistics Grid -->
+      <div class="stats-grid">
+        <div class="glass-card stat-card">
+          <div class="stat-icon indigo">👨‍🎓</div>
+          <div class="stat-info">
+            <div class="stat-value" id="adminTotalStudents">--</div>
+            <div class="stat-label">Total Students</div>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card">
+          <div class="stat-icon cyan">👨‍🏫</div>
+          <div class="stat-info">
+            <div class="stat-value" id="adminTotalFaculty">--</div>
+            <div class="stat-label">Total Faculty</div>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card">
+          <div class="stat-icon emerald">🏫</div>
+          <div class="stat-info">
+            <div class="stat-value" id="adminTotalClasses">--</div>
+            <div class="stat-label">Classes & Sections</div>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card">
+          <div class="stat-icon amber">⚠️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="adminDefaultersCount">--</div>
+            <div class="stat-label">Defaulters (< 75%)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="portal-nav">
+        <button class="portal-tab-btn active" id="admTabBtn-students" onclick="showAdminTab('students')">
+          👨‍🎓 Student Management
+        </button>
+        <button class="portal-tab-btn" id="admTabBtn-faculty" onclick="showAdminTab('faculty')">
+          👨‍🏫 Faculty Management
+        </button>
+        <button class="portal-tab-btn" id="admTabBtn-classes" onclick="showAdminTab('classes')">
+          🏫 Class Management
+        </button>
+        <button class="portal-tab-btn" id="admTabBtn-subjects" onclick="showAdminTab('subjects')">
+          📚 Subject Management
+        </button>
+        <button class="portal-tab-btn" id="admTabBtn-reports" onclick="showAdminTab('reports')">
+          📈 Campus Defaulter Reports
+        </button>
+      </div>
+
+      <!-- Tab 1: Student Management -->
+      <div id="admTab-students">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3>Student Roster</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAdminCreateModal('student')">+ Add Student</button>
+          </div>
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Class</th>
+                  <th>Semester</th>
+                  <th>Batch</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminStudentsTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Faculty Management -->
+      <div id="admTab-faculty" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3>Faculty Directory</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAdminCreateModal('faculty')">+ Add Faculty</button>
+          </div>
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Employee ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Department</th>
+                  <th>Designation</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminFacultyTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Class Management -->
+      <div id="admTab-classes" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3>Class & Section Registry</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAdminCreateModal('class')">+ Add Class</button>
+          </div>
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Class Name</th>
+                  <th>Section</th>
+                  <th>Semester</th>
+                  <th>Academic Year</th>
+                  <th>Enrolled Students</th>
+                  <th>Subjects</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminClassesTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Subject Management -->
+      <div id="admTab-subjects" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3>Academic Subject Curriculum</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAdminCreateModal('subject')">+ Add Subject</button>
+          </div>
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Subject Code</th>
+                  <th>Subject Name</th>
+                  <th>Class</th>
+                  <th>Faculty In-Charge</th>
+                  <th>Credits</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminSubjectsTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Defaulter Reports -->
+      <div id="admTab-reports" style="display: none;">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3>⚠️ Institutional Attendance Defaulters List (&lt; 75%)</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">
+                Students at risk of being barred from end-semester examinations.
+              </p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="exportAdminDefaulterCSV()">
+              📥 Export CSV
+            </button>
+          </div>
+          <div class="live-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Student Name</th>
+                  <th>Email</th>
+                  <th>Class</th>
+                  <th>Attendance %</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminDefaultersTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       MODAL DIALOGS FOR ADMIN CRUD
+       ==================================================================== -->
+  <div class="modal-backdrop" id="adminModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="adminModalTitle">Modal Title</h3>
+        <button class="icon-btn" onclick="closeAdminModal()">✕</button>
+      </div>
+      <form id="adminModalForm" onsubmit="handleAdminModalSubmit(event)">
+        <div id="adminModalBody">
+          <!-- Dynamically inserted fields -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeAdminModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="adminModalSubmitBtn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main JavaScript Bundle -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

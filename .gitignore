@@ -1,0 +1,5 @@
+node_modules/
+attendance.db
+attendance.db-shm
+attendance.db-wal
+.env
